@@ -313,7 +313,7 @@ contains
           .not. this%kicktime > M_ZERO ) then
         write(message(1),'(a)') 'It seems that the gauge-field is diverging.'
         write(message(2),'(a)') 'You should probably check the propagation parameters.'
-        call messages_warning(2)
+        call messages_fatal(2)
       end if
     end do
     POP_SUB(gauge_field_propagate)
