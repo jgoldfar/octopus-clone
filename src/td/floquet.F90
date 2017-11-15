@@ -1464,7 +1464,7 @@ contains
 
      st%eigenval = M_ZERO
      do ik=st%d%kpt%start,st%d%kpt%end
-       call zfloquet_FBZ_subspace_diag(sys%gr%der, st, hm, ik, start=.true.)
+!        call zfloquet_FBZ_subspace_diag(sys%gr%der, st, hm, ik, start=.true.)
      end do
      call comm_allreduce(st%st_kpt_mpi_grp%comm,  st%eigenval(:,:))
 
