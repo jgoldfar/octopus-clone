@@ -3,7 +3,7 @@
 Test       : Floquet calculation periodic system
 Program    : octopus
 TestGroups : short-run, floquet
-Enabled    : Yes
+Enabled    : No
 
 
 # Ground state 
