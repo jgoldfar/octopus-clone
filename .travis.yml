@@ -1,0 +1,107 @@
+dist: xenial
+
+sudo: false
+
+language: cpp
+
+compiler:
+  - clang
+  - gcc
+
+os:
+  - linux
+  - osx
+
+addons:
+  apt:
+    packages:
+      - autoconf
+      - gfortran
+      - libfftw3-dev
+      - libblas-dev
+      - liblapack-dev
+      - libgsl-dev
+      - automake
+      - curl
+      - libtool
+  homebrew:
+    packages:
+      - autoconf
+      - gcc
+      - fftw
+      - openblas
+      - lapack
+      - gsl
+      - automake
+
+matrix:
+  allow_failures:
+    - os: osx
+  exclude:
+    - os: osx
+      compiler: clang
+
+script:
+  - mkdir -p ${TRAVIS_BUILD_DIR}/build-libxc
+  - cd ${TRAVIS_BUILD_DIR}/build-libxc
+  - curl -o libxc-4.3.4.tar.gz -L http://www.tddft.org/programs/octopus/down.php?file=libxc/4.3.4/libxc-4.3.4.tar.gz
+  - tar xzf libxc-4.3.4.tar.gz
+  - cd libxc-4.3.4
+  - autoreconf -fvi
+  - ./configure --prefix=${TRAVIS_BUILD_DIR}/usr
+  - make
+  - make install
+  - cd ${TRAVIS_BUILD_DIR}
+  - autoreconf -fvi
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      export LDFLAGS="${LDFLAGS} -L/usr/local/lib -L/usr/local/opt/openblas/lib -L/usr/local/opt/lapack/lib"
+      export CPPFLAGS="${CPPFLAGS} -I/usr/local/include -I/usr/local/opt/openblas/include -I/usr/local/opt/lapack/include"
+      export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/opt/openblas/lib/pkgconfig:/usr/local/opt/lapack/lib/pkgconfig"
+      ./configure --prefix=${TRAVIS_BUILD_DIR}/usr \
+                  --with-libxc-prefix=${TRAVIS_BUILD_DIR}/usr \
+                  --with-fftw-prefix=/usr/local \
+                  --with-blas=openblas \
+                  --with-lapack=lapacke \
+                  --disable-gdlib \
+                  --without-sparskit \
+                  --with-netcdf-prefix=no \
+                  --with-etsf-io-prefix=no \
+                  --with-berkeleygw-prefix=no \
+                  --with-arpack=no \
+                  --with-parpack=no \
+                  --with-feast=no \
+                  --with-isf-prefix=no \
+                  --with-pnfft-prefix=no \
+                  --with-metis-prefix=no \
+                  --with-parmetis-prefix=no \
+                  --with-libfm=no \
+                  --with-pfft-prefix=no \
+                  --with-pspio-prefix=no \
+                  --with-nfft=no \
+                  --with-blacs=no \
+                  --with-scalapack=no
+    elif [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      ./configure --prefix=${TRAVIS_BUILD_DIR}/usr \
+                  --with-libxc-prefix=${TRAVIS_BUILD_DIR}/usr \
+                  --disable-gdlib \
+                  --without-sparskit \
+                  --with-netcdf-prefix=no \
+                  --with-etsf-io-prefix=no \
+                  --with-berkeleygw-prefix=no \
+                  --with-arpack=no \
+                  --with-parpack=no \
+                  --with-feast=no \
+                  --with-isf-prefix=no \
+                  --with-pnfft-prefix=no \
+                  --with-metis-prefix=no \
+                  --with-parmetis-prefix=no \
+                  --with-libfm=no \
+                  --with-pfft-prefix=no \
+                  --with-pspio-prefix=no \
+                  --with-nfft=no \
+                  --with-blacs=no \
+                  --with-scalapack=no
+    fi
+  - make
+  - make check-short > /dev/null 2>&1 || echo "Tests Failed."

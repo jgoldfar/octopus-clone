@@ -1,0 +1,34 @@
+image: debian:stretch-slim
+
+# Is performed before the scripts in the stages setup
+before_script:
+  - apt-get -y update
+  - apt-get --no-install-recommends install -y build-essential libfftw3-dev libblas-dev liblapack-dev gfortran libgsl-dev autoconf automake curl ca-certificates libtool procps
+
+# Stage "Build"
+#TODO: Build PFFT & FFTW3 with MPI to enable support in octopus
+#TODO: Enable LibISF to complete support for Poisson solver
+#TODO: Figure out how to build libxc in a separate stage
+run-build:
+  stage: build
+  script:
+    - mkdir build-libxc && cd build-libxc
+    - curl -o libxc-4.3.4.tar.gz -L http://www.tddft.org/programs/octopus/down.php?file=libxc/4.3.4/libxc-4.3.4.tar.gz
+    - tar xzf libxc-4.3.4.tar.gz
+    - cd libxc-4.3.4
+    - autoreconf -fvi
+    - ./configure --prefix=/usr
+    - make
+    - make install
+    - cd ../..
+    - autoreconf -fvi
+    - ./configure --prefix=`pwd`/usr
+    - make
+    - make check-short || echo "Tests Failed."
+    - make install
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    when: always
+    expire_in: 6 mos
+    paths:
+      - usr/
